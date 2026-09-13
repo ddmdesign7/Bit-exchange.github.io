@@ -1,28 +1,81 @@
 name: NodeJS with Webpack
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
-  build:
+  # ✅ Validation job
+  validate:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+  # 🔨 Build job
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
-
+      fail-fast: false
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-    - name: Build
-      run: |
-        npm install
-        npx webpack
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: webpack-build-${{ matrix.node-version }}
+          path: dist/
+
+  # 🚀 Deployment job
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: webpack-build-20.x
+          path: dist/
+
+      - name: Deploy to server
+        run: |
+          echo "Deploying to production..."
+          # Example: rsync, scp, or cloud CLI
+          # rsync -avz dist/ user@server:/var/www/app
