@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useTrading } from '../../context/TradingContext';
 import { Transaction } from '../../types';
 import { Modal } from '../ui/Modal';
+import { useVirtualScroll } from '../../hooks/useVirtualScroll';
 import { 
   Search, 
   Filter, 
@@ -13,7 +14,8 @@ import {
   Copy,
   Check,
   Calendar,
-  FileText
+  FileText,
+  Zap
 } from 'lucide-react';
 
 export const TransactionsView: React.FC = () => {
@@ -23,6 +25,10 @@ export const TransactionsView: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'COMPLETED' | 'PENDING'>('ALL');
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [copiedTx, setCopiedTx] = useState(false);
+
+  // Virtualization Container Refs
+  const desktopContainerRef = useRef<HTMLDivElement>(null);
+  const mobileContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
@@ -40,6 +46,22 @@ export const TransactionsView: React.FC = () => {
       return true;
     });
   }, [transactions, searchQuery, typeFilter, statusFilter]);
+
+  // Desktop Virtualization: 64px row height
+  const desktopVirtual = useVirtualScroll({
+    itemsCount: filteredTransactions.length,
+    itemHeight: 64,
+    containerRef: desktopContainerRef,
+    overscan: 5,
+  });
+
+  // Mobile Virtualization: 120px card height
+  const mobileVirtual = useVirtualScroll({
+    itemsCount: filteredTransactions.length,
+    itemHeight: 120,
+    containerRef: mobileContainerRef,
+    overscan: 4,
+  });
 
   const handleExportCSV = () => {
     const headers = 'ID,Type,Asset,Amount,Price,Total,Fee,Status,Timestamp,TxHash\n';
@@ -91,16 +113,23 @@ export const TransactionsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Export CSV Button */}
-        <button
-          type="button"
-          id="btn-export-csv"
-          onClick={handleExportCSV}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
-        >
-          <Download className="w-4 h-4 text-emerald-400" />
-          <span>Export CSV Statement</span>
-        </button>
+        {/* Header Actions */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+            <Zap className="w-3.5 h-3.5 fill-emerald-400" />
+            <span>Virtual Engine • 60 FPS</span>
+          </div>
+
+          <button
+            type="button"
+            id="btn-export-csv"
+            onClick={handleExportCSV}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer w-full sm:w-auto shrink-0"
+          >
+            <Download className="w-4 h-4 text-emerald-400" />
+            <span>Export CSV</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -140,87 +169,104 @@ export const TransactionsView: React.FC = () => {
 
       {/* Transactions Container */}
       <div className="glass-panel rounded-2xl border border-slate-700/60 shadow-xl overflow-hidden">
-        {/* Mobile Native Transactions List (<sm) */}
-        <div className="sm:hidden divide-y divide-slate-800/60">
+        {/* Mobile Native Transactions List (<sm) - Virtualized */}
+        <div 
+          ref={mobileContainerRef}
+          className="sm:hidden max-h-[600px] overflow-y-auto"
+        >
           {filteredTransactions.length === 0 ? (
             <div className="py-12 text-center text-slate-500 text-xs">
               No transactions found matching your criteria.
             </div>
           ) : (
-            filteredTransactions.map((tx) => {
-              const isPositive = tx.type === 'BUY' || tx.type === 'DEPOSIT';
-              return (
-                <div
-                  key={tx.id}
-                  onClick={() => setSelectedTx(tx)}
-                  className="p-3.5 active:bg-slate-800/50 transition-colors cursor-pointer space-y-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[10px] ${
-                          tx.type === 'BUY'
-                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                            : tx.type === 'SELL'
-                            ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                            : tx.type === 'DEPOSIT'
-                            ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
-                            : tx.type === 'INVESTMENT'
-                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                            : tx.type === 'REINVESTMENT'
-                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                        }`}
-                      >
-                        {tx.type === 'REINVESTMENT' ? 'RE-INVEST' : tx.type}
-                      </span>
-                      <span className="font-extrabold text-xs text-slate-100">
-                        {tx.assetName}
-                      </span>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        ({tx.assetSymbol})
+            <div style={{ height: `${mobileVirtual.totalHeight}px`, position: 'relative' }}>
+              {mobileVirtual.virtualRows.map((vRow) => {
+                const tx = filteredTransactions[vRow.index];
+                if (!tx) return null;
+                const isPositive = tx.type === 'BUY' || tx.type === 'DEPOSIT';
+                return (
+                  <div
+                    key={tx.id}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${vRow.offsetTop}px)`,
+                    }}
+                    onClick={() => setSelectedTx(tx)}
+                    className="p-3.5 active:bg-slate-800/50 transition-colors cursor-pointer space-y-2 border-b border-slate-800/60"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                            tx.type === 'BUY'
+                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              : tx.type === 'SELL'
+                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                              : tx.type === 'DEPOSIT'
+                              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
+                              : tx.type === 'INVESTMENT'
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                              : tx.type === 'REINVESTMENT'
+                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                              : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                          }`}
+                        >
+                          {tx.type === 'REINVESTMENT' ? 'RE-INVEST' : tx.type}
+                        </span>
+                        <span className="font-extrabold text-xs text-slate-100">
+                          {tx.assetName}
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-400">
+                          ({tx.assetSymbol})
+                        </span>
+                      </div>
+
+                      <div className="text-right font-mono font-bold text-xs text-emerald-400">
+                        ${tx.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+                      <span className="text-[10px] font-sans text-slate-400">{tx.timestamp}</span>
+                      <span className="text-slate-200">
+                        {isPositive ? '+' : '-'}{tx.amount} {tx.assetSymbol}
                       </span>
                     </div>
 
-                    <div className="text-right font-mono font-bold text-xs text-emerald-400">
-                      ${tx.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {tx.note && (
+                      <div className="text-[10px] text-slate-300 bg-slate-900/80 border border-slate-800 rounded px-2 py-1 leading-snug">
+                        {tx.note}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
+                      <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>{tx.status}</span>
+                      </span>
+                      <span className="text-slate-500 flex items-center gap-1">
+                        <FileText className="w-3 h-3 text-slate-400" />
+                        <span>Tap for Receipt</span>
+                      </span>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
-                    <span className="text-[10px] font-sans text-slate-400">{tx.timestamp}</span>
-                    <span className="text-slate-200">
-                      {isPositive ? '+' : '-'}{tx.amount} {tx.assetSymbol}
-                    </span>
-                  </div>
-
-                  {tx.note && (
-                    <div className="text-[10px] text-slate-300 bg-slate-900/80 border border-slate-800 rounded px-2 py-1 leading-snug">
-                      {tx.note}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
-                    <span className="inline-flex items-center gap-1 text-emerald-400 font-bold">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>{tx.status}</span>
-                    </span>
-                    <span className="text-slate-500 flex items-center gap-1">
-                      <FileText className="w-3 h-3 text-slate-400" />
-                      <span>Tap for Receipt</span>
-                    </span>
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
 
-        {/* Desktop Transactions Table (sm+) */}
-        <div className="hidden sm:block overflow-x-auto">
+        {/* Desktop Transactions Table (sm+) - Virtualized */}
+        <div 
+          ref={desktopContainerRef}
+          className="hidden sm:block max-h-[640px] overflow-y-auto overflow-x-auto scrollbar-thin"
+        >
           <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-900/40">
+            <thead className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur shadow-sm">
+              <tr className="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 <th className="py-4 px-4">Type</th>
                 <th className="py-4 px-4">Asset</th>
                 <th className="py-4 px-4">Timestamp</th>
@@ -240,92 +286,107 @@ export const TransactionsView: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.map((tx) => {
-                  const isPositive = tx.type === 'BUY' || tx.type === 'DEPOSIT';
-                  return (
-                    <tr 
-                      key={tx.id} 
-                      className="hover:bg-slate-800/40 transition-colors cursor-pointer"
-                      onClick={() => setSelectedTx(tx)}
-                    >
-                      {/* Type Badge */}
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[10px] ${
-                            tx.type === 'BUY'
-                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                              : tx.type === 'SELL'
-                              ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                              : tx.type === 'DEPOSIT'
-                              ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
-                              : tx.type === 'INVESTMENT'
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                              : tx.type === 'REINVESTMENT'
-                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                              : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                          }`}
-                        >
-                          {tx.type === 'REINVESTMENT' ? 'RE-INVEST' : tx.type}
-                        </span>
-                      </td>
-
-                      {/* Asset */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-100">
-                          {tx.assetName}
-                        </div>
-                        <div className="text-[10px] font-mono text-slate-400">
-                          {tx.assetSymbol}
-                        </div>
-                        {tx.note && (
-                          <div className="text-[10px] text-slate-300 bg-slate-800/70 border border-slate-700/60 rounded px-1.5 py-0.5 mt-1 leading-normal max-w-xs sm:max-w-md">
-                            {tx.note}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Timestamp */}
-                      <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px]">
-                        {tx.timestamp}
-                      </td>
-
-                      {/* Amount */}
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-200">
-                        {isPositive ? '+' : '-'}{tx.amount} {tx.assetSymbol}
-                      </td>
-
-                      {/* Price */}
-                      <td className="py-3.5 px-4 text-right font-mono text-slate-300">
-                        ${tx.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-
-                      {/* Total */}
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
-                        ${tx.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>{tx.status}</span>
-                        </span>
-                      </td>
-
-                      {/* Receipt Action */}
-                      <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedTx(tx)}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition-colors cursor-pointer"
-                          title="View receipt"
-                        >
-                          <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                        </button>
-                      </td>
+                <>
+                  {desktopVirtual.startIndex > 0 && (
+                    <tr style={{ height: `${desktopVirtual.startIndex * 64}px` }}>
+                      <td colSpan={8} />
                     </tr>
-                  );
-                })
+                  )}
+                  {desktopVirtual.virtualRows.map((vRow) => {
+                    const tx = filteredTransactions[vRow.index];
+                    if (!tx) return null;
+                    const isPositive = tx.type === 'BUY' || tx.type === 'DEPOSIT';
+                    return (
+                      <tr 
+                        key={tx.id} 
+                        className="hover:bg-slate-800/40 transition-colors cursor-pointer"
+                        style={{ height: '64px' }}
+                        onClick={() => setSelectedTx(tx)}
+                      >
+                        {/* Type Badge */}
+                        <td className="py-3.5 px-4">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                              tx.type === 'BUY'
+                                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                                : tx.type === 'SELL'
+                                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                                : tx.type === 'DEPOSIT'
+                                ? 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
+                                : tx.type === 'INVESTMENT'
+                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                : tx.type === 'REINVESTMENT'
+                                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                                : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                            }`}
+                          >
+                            {tx.type === 'REINVESTMENT' ? 'RE-INVEST' : tx.type}
+                          </span>
+                        </td>
+
+                        {/* Asset */}
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-100">
+                            {tx.assetName}
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-400">
+                            {tx.assetSymbol}
+                          </div>
+                          {tx.note && (
+                            <div className="text-[10px] text-slate-300 bg-slate-800/70 border border-slate-700/60 rounded px-1.5 py-0.5 mt-1 leading-normal max-w-xs sm:max-w-md">
+                              {tx.note}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Timestamp */}
+                        <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px]">
+                          {tx.timestamp}
+                        </td>
+
+                        {/* Amount */}
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-200">
+                          {isPositive ? '+' : '-'}{tx.amount} {tx.assetSymbol}
+                        </td>
+
+                        {/* Price */}
+                        <td className="py-3.5 px-4 text-right font-mono text-slate-300">
+                          ${tx.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+
+                        {/* Total */}
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
+                          ${tx.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>{tx.status}</span>
+                          </span>
+                        </td>
+
+                        {/* Receipt Action */}
+                        <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedTx(tx)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-slate-100 transition-colors cursor-pointer"
+                            title="View receipt"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredTransactions.length > desktopVirtual.endIndex + 1 && (
+                    <tr style={{ height: `${(filteredTransactions.length - desktopVirtual.endIndex - 1) * 64}px` }}>
+                      <td colSpan={8} />
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>

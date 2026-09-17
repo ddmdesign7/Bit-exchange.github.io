@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { TradingProvider, useTrading } from './context/TradingContext';
 import { Navbar } from './components/layout/Navbar';
 import { TickerRibbon } from './components/layout/TickerRibbon';
 import { Footer } from './components/layout/Footer';
 import { MobileNav } from './components/layout/MobileNav';
 import { AuthCard } from './components/auth/AuthCard';
-import { DashboardView } from './components/dashboard/DashboardView';
-import { MarketView } from './components/markets/MarketView';
-import { TradeView } from './components/trade/TradeView';
-import { WalletView } from './components/wallet/WalletView';
-import { TransactionsView } from './components/transactions/TransactionsView';
-import { SecurityView } from './components/security/SecurityView';
 import { DepositModal } from './components/wallet/DepositModal';
 import { ToastContainer } from './components/ui/Toast';
+import { ViewSkeleton } from './components/ui/ViewSkeleton';
+
+// Code-Split Lazy Loaded Views for optimized initial bundle delivery
+const DashboardView = lazy(() => import('./components/dashboard/DashboardView').then(m => ({ default: m.DashboardView })));
+const MarketView = lazy(() => import('./components/markets/MarketView').then(m => ({ default: m.MarketView })));
+const TradeView = lazy(() => import('./components/trade/TradeView').then(m => ({ default: m.TradeView })));
+const WalletView = lazy(() => import('./components/wallet/WalletView').then(m => ({ default: m.WalletView })));
+const TransactionsView = lazy(() => import('./components/transactions/TransactionsView').then(m => ({ default: m.TransactionsView })));
+const SecurityView = lazy(() => import('./components/security/SecurityView').then(m => ({ default: m.SecurityView })));
 
 const MainAppContent: React.FC = () => {
   const { user, currentPage, setCurrentPage, toasts, removeToast, theme } = useTrading();
@@ -70,12 +73,14 @@ const MainAppContent: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 pt-3 sm:pt-6 pb-24 md:pb-12 overflow-x-hidden">
-        {currentPage === 'dashboard' && <DashboardView />}
-        {currentPage === 'markets' && <MarketView />}
-        {currentPage === 'trade' && <TradeView />}
-        {currentPage === 'wallet' && <WalletView />}
-        {currentPage === 'transactions' && <TransactionsView />}
-        {currentPage === 'settings' && <SecurityView />}
+        <Suspense fallback={<ViewSkeleton type={currentPage} />}>
+          {currentPage === 'dashboard' && <DashboardView />}
+          {currentPage === 'markets' && <MarketView />}
+          {currentPage === 'trade' && <TradeView />}
+          {currentPage === 'wallet' && <WalletView />}
+          {currentPage === 'transactions' && <TransactionsView />}
+          {currentPage === 'settings' && <SecurityView />}
+        </Suspense>
       </main>
 
       {/* Quick Deposit Modal from Navbar */}
