@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTrading } from '../../context/TradingContext';
 import { Logo } from '../layout/Logo';
 import { Eye, EyeOff, Lock, Mail, User as UserIcon, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface AuthCardProps {
   initialMode?: 'login' | 'register' | 'forgot-password';
+  onSuccess?: () => void;
 }
 
-export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => {
+export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login', onSuccess }) => {
   const { login, register, setCurrentPage, addToast } = useTrading();
   const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>(initialMode);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
+
+  const switchMode = (newMode: 'login' | 'register' | 'forgot-password') => {
+    setMode(newMode);
+    setCurrentPage(newMode);
+  };
   
   // Form fields
   const [email, setEmail] = useState('Berginjoshua1@gmail.com');
@@ -40,6 +50,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
         }
         await new Promise((r) => setTimeout(r, 600)); // realistic smooth auth feedback
         await login(email, password);
+        onSuccess?.();
       } else if (mode === 'register') {
         if (!name.trim() || !email.trim() || !password.trim()) {
           addToast({
@@ -70,6 +81,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
         }
         await new Promise((r) => setTimeout(r, 600));
         await register(name, email, password);
+        onSuccess?.();
       } else if (mode === 'forgot-password') {
         if (!email.trim() || !email.includes('@')) {
           addToast({
@@ -117,6 +129,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
     setIsLoading(true);
     await new Promise((r) => setTimeout(r, 600));
     await login('google.user@bittrade.net');
+    onSuccess?.();
     setIsLoading(false);
   };
 
@@ -225,7 +238,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
                 type="button"
                 onClick={() => {
                   setForgotSent(false);
-                  setMode('login');
+                  switchMode('login');
                 }}
                 className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors mt-2"
               >
@@ -285,7 +298,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
                     {mode === 'login' && (
                       <button
                         type="button"
-                        onClick={() => setMode('forgot-password')}
+                        onClick={() => switchMode('forgot-password')}
                         className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium cursor-pointer"
                       >
                         Forgot Password?
@@ -451,7 +464,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
                 Don’t have an account?{' '}
                 <button
                   type="button"
-                  onClick={() => setMode('register')}
+                  onClick={() => switchMode('register')}
                   className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 transition-colors cursor-pointer"
                 >
                   Create Account
@@ -464,7 +477,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
                 Already registered?{' '}
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => switchMode('login')}
                   className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 transition-colors cursor-pointer"
                 >
                   Sign In to Account
@@ -477,7 +490,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ initialMode = 'login' }) => 
                 Remembered your password?{' '}
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => switchMode('login')}
                   className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2 transition-colors cursor-pointer"
                 >
                   Back to Sign In

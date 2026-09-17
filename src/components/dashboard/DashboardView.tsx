@@ -63,31 +63,59 @@ export const DashboardView: React.FC = () => {
     <div className="space-y-4 sm:space-y-6 pb-6 sm:pb-12 w-full">
       {/* Welcome Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 glass-panel rounded-2xl p-4 sm:p-6 border border-slate-700/60 shadow-lg relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-lg sm:text-2xl font-black text-slate-100 tracking-tight">
-              Good day, {user?.name || 'Joshua James Bergin'}
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] sm:text-[10px] font-bold text-emerald-400">
-              {user?.kycTier || 'Tier 2 Verified'}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
-            <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-medium">Profile:</span>
-              <strong className="text-slate-200 font-semibold">{user?.name || 'Joshua James Bergin'}</strong>
+        <div className="relative z-10 flex items-start sm:items-center gap-3.5">
+          {/* User Profile Avatar with Direct Settings Shortcut */}
+          <button
+            type="button"
+            id="btn-dashboard-profile-avatar"
+            onClick={() => setCurrentPage('settings')}
+            className="relative group shrink-0 text-left focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-2xl cursor-pointer"
+            title="Manage profile picture in Settings"
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden border-2 border-emerald-500/50 shadow-md shadow-emerald-500/10 bg-slate-900 flex items-center justify-center p-0.5 group-hover:border-emerald-400 transition-all">
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name || 'User Profile'}
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              ) : (
+                <div className="w-full h-full rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-slate-950 font-black text-lg">
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : 'JB'}
+                </div>
+              )}
             </div>
-            <span className="hidden sm:inline text-slate-700">•</span>
-            <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-medium">Email:</span>
-              <strong className="text-slate-200 font-mono font-semibold">{user?.email || 'Berginjoshua1@gmail.com'}</strong>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-slate-900 border-2 border-emerald-500 flex items-center justify-center shadow">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             </div>
-            <span className="hidden sm:inline text-slate-700">•</span>
-            <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-medium">Available:</span>
-              <strong className="text-emerald-400 font-mono font-bold">
-                ${cashBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </strong>
+          </button>
+
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-lg sm:text-2xl font-black text-slate-100 tracking-tight">
+                Good day, {user?.name || 'Joshua James Bergin'}
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[9px] sm:text-[10px] font-bold text-emerald-400">
+                {user?.kycTier || 'Tier 2 Verified'}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-slate-400">
+              <div className="flex items-center gap-1">
+                <span className="text-slate-500 font-medium">Profile:</span>
+                <strong className="text-slate-200 font-semibold">{user?.name || 'Joshua James Bergin'}</strong>
+              </div>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <div className="flex items-center gap-1">
+                <span className="text-slate-500 font-medium">Email:</span>
+                <strong className="text-slate-200 font-mono font-semibold">{user?.email || 'Berginjoshua1@gmail.com'}</strong>
+              </div>
+              <span className="hidden sm:inline text-slate-700">•</span>
+              <div className="flex items-center gap-1">
+                <span className="text-slate-500 font-medium">Available:</span>
+                <strong className="text-emerald-400 font-mono font-bold">
+                  ${cashBalanceUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </strong>
+              </div>
             </div>
           </div>
         </div>

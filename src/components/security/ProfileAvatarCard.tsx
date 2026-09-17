@@ -304,6 +304,35 @@ export const ProfileAvatarCard: React.FC = () => {
               <span>Recommended: Square ratio (at least 200 &times; 200 px)</span>
             </div>
           </div>
+
+          {/* Explicit Device File Input Control */}
+          <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <label htmlFor="input-avatar-file-direct" className="text-xs font-bold text-slate-200 block">
+                Select Photo from Device
+              </label>
+              <p className="text-[11px] text-slate-400">
+                Choose an image file directly from your local filesystem
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                id="input-avatar-file-direct"
+                type="file"
+                accept="image/png, image/jpeg, image/webp, image/gif, image/svg+xml"
+                onChange={handleInputChange}
+                className="block w-full sm:w-auto text-xs text-slate-400
+                  file:mr-2.5 file:py-1.5 file:px-3.5
+                  file:rounded-lg file:border-0
+                  file:text-xs file:font-bold
+                  file:bg-emerald-500 file:text-slate-950
+                  hover:file:bg-emerald-400
+                  file:cursor-pointer cursor-pointer
+                  bg-slate-950/60 rounded-xl border border-slate-700/60 p-1"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

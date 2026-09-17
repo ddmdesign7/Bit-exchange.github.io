@@ -64,6 +64,27 @@ interface TradingContextType {
   setTheme: (theme: AppTheme) => void;
 }
 
+const VALID_NAV_PAGES: NavPage[] = [
+  'login',
+  'register',
+  'forgot-password',
+  'dashboard',
+  'markets',
+  'trade',
+  'wallet',
+  'transactions',
+  'settings',
+];
+
+const getPageFromHash = (): NavPage => {
+  if (typeof window === 'undefined') return 'login';
+  const raw = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0];
+  if (raw && VALID_NAV_PAGES.includes(raw as NavPage)) {
+    return raw as NavPage;
+  }
+  return 'login';
+};
+
 const TradingContext = createContext<TradingContextType | undefined>(undefined);
 
 export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -76,7 +97,7 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch {
       // ignore
     }
-    return INITIAL_USER;
+    return null;
   });
 
   useEffect(() => {
@@ -91,7 +112,36 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [user]);
 
-  const [currentPage, setCurrentPage] = useState<NavPage>('dashboard');
+  const [currentPage, setCurrentPageState] = useState<NavPage>(getPageFromHash);
+
+  const setCurrentPage = (page: NavPage) => {
+    setCurrentPageState(page);
+    if (typeof window !== 'undefined') {
+      const targetHash = page;
+      const current = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0];
+      if (current !== targetHash) {
+        window.location.hash = targetHash;
+      }
+    }
+  };
+
+  // Synchronize hash routing on popstate / hashchange and ensure #login is initialized
+  useEffect(() => {
+    const handleHashChange = () => {
+      const page = getPageFromHash();
+      setCurrentPageState(page);
+    };
+
+    if (typeof window !== 'undefined') {
+      const current = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0];
+      if (!current) {
+        window.location.hash = 'login';
+      }
+    }
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   const [theme, setThemeState] = useState<AppTheme>(() => {
     try {
       const saved = localStorage.getItem('bittrade_theme');
