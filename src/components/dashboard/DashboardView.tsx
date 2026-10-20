@@ -5,6 +5,7 @@ import { PortfolioChart } from './PortfolioChart';
 import { QuickTradeModal } from './QuickTradeModal';
 import { QuickWithdrawSection } from './QuickWithdrawSection';
 import { InvestmentNoticeModal } from '../wallet/InvestmentNoticeModal';
+import { AuthCardModal } from '../auth/AuthCardModal';
 import { 
   Wallet, 
   DollarSign, 
@@ -16,7 +17,9 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldCheck,
-  Zap
+  Zap,
+  CreditCard,
+  BadgeCheck
 } from 'lucide-react';
 
 export const DashboardView: React.FC = () => {
@@ -39,6 +42,7 @@ export const DashboardView: React.FC = () => {
 
   const [tradeModalOpen, setTradeModalOpen] = useState(false);
   const [tradeModalAction, setTradeModalAction] = useState<'BUY' | 'SELL'>('BUY');
+  const [authCardModalOpen, setAuthCardModalOpen] = useState(false);
 
   const totalAssetsCount = Object.keys(holdings).filter((k) => holdings[k] > 0).length;
 
@@ -124,6 +128,16 @@ export const DashboardView: React.FC = () => {
         <div className="flex items-center gap-2 shrink-0 z-10 pt-1 sm:pt-0">
           <button
             type="button"
+            id="btn-dashboard-authcard"
+            onClick={() => setAuthCardModalOpen(true)}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/15 to-teal-500/15 hover:from-amber-500/25 hover:to-emerald-500/25 text-amber-300 border border-amber-500/40 text-xs font-black transition-all active:scale-95 cursor-pointer shadow-sm"
+            title="Inspect Institutional AuthCard (BTN-8849)"
+          >
+            <CreditCard className="w-4 h-4 text-amber-400" />
+            <span>AuthCard</span>
+          </button>
+          <button
+            type="button"
             id="btn-quick-buy"
             onClick={() => handleOpenTrade('BUY')}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer"
@@ -144,6 +158,49 @@ export const DashboardView: React.FC = () => {
 
         {/* Background glow accent */}
         <div className="absolute right-0 top-0 w-72 h-full bg-gradient-to-l from-emerald-500/10 to-transparent pointer-events-none" />
+      </div>
+
+      {/* TOP FIRST REVIEW IMMEDIATELY NOTIFICATION BANNER */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 via-slate-900 to-slate-900 border-2 border-amber-500/60 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-3 animate-in fade-in duration-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 shrink-0">
+            <Zap className="w-5 h-5 text-amber-400 animate-pulse" />
+          </div>
+          <div className="space-y-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full font-sans">
+                Top First Review Immediately
+              </span>
+              <span className="text-xs text-slate-400 font-mono font-semibold">
+                /#/withdrawal-review
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm font-black text-slate-100">
+              Withdrawal Review & Compliance Authorization &mdash; <span className="text-emerald-400 font-mono">$47,986.00</span> (<span className="text-amber-300">$5,960.00 fee required</span>)
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            id="btn-dashboard-inspect-authcard"
+            onClick={() => setAuthCardModalOpen(true)}
+            className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+          >
+            <CreditCard className="w-4 h-4 text-amber-400" />
+            <span>Inspect AuthCard</span>
+          </button>
+          <a
+            href="/#/withdrawal-review"
+            id="btn-dashboard-continue-to-withdrawal-review"
+            data-testid="continue-to-withdrawal-review"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs sm:text-sm font-black transition-all shadow-lg shadow-emerald-500/25 active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>Continue to Withdrawal Review</span>
+            <ArrowUpRight className="w-4 h-4" />
+          </a>
+        </div>
       </div>
 
       {/* 4 Main Stat Cards */}
@@ -574,6 +631,12 @@ export const DashboardView: React.FC = () => {
         isOpen={investmentNoticeOpen}
         onClose={() => setInvestmentNoticeOpen(false)}
         onOpenDeposit={() => setCurrentPage('wallet')}
+      />
+
+      {/* Institutional AuthCard Modal */}
+      <AuthCardModal
+        isOpen={authCardModalOpen}
+        onClose={() => setAuthCardModalOpen(false)}
       />
     </div>
   );

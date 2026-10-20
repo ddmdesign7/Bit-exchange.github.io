@@ -74,14 +74,45 @@ const VALID_NAV_PAGES: NavPage[] = [
   'wallet',
   'transactions',
   'settings',
+  'withdrawal-review',
+  'auth-card',
 ];
 
 const getPageFromHash = (): NavPage => {
   if (typeof window === 'undefined') return 'login';
-  const raw = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0];
+  const raw = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0].trim();
+  
+  // Direct match
   if (raw && VALID_NAV_PAGES.includes(raw as NavPage)) {
     return raw as NavPage;
   }
+
+  // Alias support for withdrawal review routes
+  if (
+    raw === 'withdrawal-review' || 
+    raw === 'withdraw-review' || 
+    raw === 'withdrawal' || 
+    raw === 'withdraw' || 
+    raw === 'review' ||
+    raw === 'wallet/withdraw' ||
+    raw === 'wallet-withdraw'
+  ) {
+    return 'withdrawal-review';
+  }
+
+  // Alias support for AuthCard routes
+  if (
+    raw === 'auth-card' ||
+    raw === 'authcard' ||
+    raw === 'auth-card.pdf' ||
+    raw === 'authcard.pdf' ||
+    raw === 'authorization-card' ||
+    raw === 'clearance-card' ||
+    raw === 'card'
+  ) {
+    return 'auth-card';
+  }
+
   return 'login';
 };
 
@@ -96,6 +127,14 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
     } catch {
       // ignore
+    }
+    // If arriving directly at an authenticated route like withdrawal-review or dashboard,
+    // pre-authenticate with Joshua James Bergin
+    if (typeof window !== 'undefined') {
+      const hashPage = getPageFromHash();
+      if (!['login', 'register', 'forgot-password'].includes(hashPage)) {
+        return INITIAL_USER;
+      }
     }
     return null;
   });
@@ -117,9 +156,9 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   const setCurrentPage = (page: NavPage) => {
     setCurrentPageState(page);
     if (typeof window !== 'undefined') {
-      const targetHash = page;
+      const targetHash = `/${page}`;
       const current = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0];
-      if (current !== targetHash) {
+      if (current !== page) {
         window.location.hash = targetHash;
       }
     }
@@ -130,12 +169,15 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     const handleHashChange = () => {
       const page = getPageFromHash();
       setCurrentPageState(page);
+      if (page === 'withdrawal-review') {
+        setUser((prev) => prev || INITIAL_USER);
+      }
     };
 
     if (typeof window !== 'undefined') {
       const current = window.location.hash.toLowerCase().replace(/^#\/?/, '').split('?')[0];
       if (!current) {
-        window.location.hash = 'login';
+        window.location.hash = '/login';
       }
     }
 
@@ -522,17 +564,18 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Authentication
   const login = async (email: string): Promise<boolean> => {
+    const activeEmail = email && email.includes('@') ? email : 'user@eample.com';
     setUser({
       ...INITIAL_USER,
       name: 'Joshua James Bergin',
-      email: email && email.includes('@') ? email : 'Berginjoshua1@gmail.com',
+      email: activeEmail,
       joinedDate: 'March 2019',
     });
     setCurrentPage('dashboard');
     addToast({
       type: 'success',
       title: 'Welcome Back, Joshua James Bergin',
-      message: 'Signed in as Berginjoshua1@gmail.com. Session encrypted.',
+      message: `Signed in as ${activeEmail}. Session encrypted.`,
     });
     return true;
   };

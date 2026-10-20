@@ -19,7 +19,8 @@ import {
   ChevronDown,
   Moon,
   Sparkles,
-  Camera
+  Camera,
+  CreditCard
 } from 'lucide-react';
 import { NavPage } from '../../types';
 
@@ -97,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDeposit }) => {
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-1.5 ml-4">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = currentPage === item.id;
+              const isActive = currentPage === item.id || (item.id === 'wallet' && currentPage === 'withdrawal-review');
               return (
                 <button
                   key={item.id}
@@ -350,6 +351,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenDeposit }) => {
                             : 'bg-slate-800 text-slate-300 border border-slate-700'
                         }`}>
                           {theme === 'true-black' ? 'True Black' : 'Dim'}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        id="btn-nav-authcard"
+                        onClick={() => handleNavClick('auth-card')}
+                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-slate-100 hover:bg-slate-800/60 transition-colors text-left cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <CreditCard className="w-4 h-4 text-amber-400" />
+                          <span>Institutional AuthCard</span>
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                          BTN-8849
                         </span>
                       </button>
 

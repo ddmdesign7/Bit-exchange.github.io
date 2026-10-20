@@ -20,8 +20,13 @@ import {
   MailCheck,
   Moon,
   Sparkles,
-  Palette
+  Palette,
+  CreditCard,
+  Printer,
+  BadgeCheck,
+  Zap
 } from 'lucide-react';
+import { InstitutionalAuthCard } from '../auth/InstitutionalAuthCard';
 
 export const SecurityView: React.FC = () => {
   const { 
@@ -32,7 +37,8 @@ export const SecurityView: React.FC = () => {
     updateUser, 
     addToast,
     theme,
-    setTheme
+    setTheme,
+    setCurrentPage
   } = useTrading();
 
   // 2FA Setup Modal State
@@ -305,6 +311,58 @@ export const SecurityView: React.FC = () => {
           <span>
             <strong className="text-slate-200">OLED Display Advantage:</strong> On OLED and AMOLED screens, pixels displaying <code className="text-emerald-400 font-mono">#000000</code> emit zero photons and consume zero display current, providing infinite black levels and extending mobile battery longevity.
           </span>
+        </div>
+      </div>
+
+      {/* Institutional Trading AuthCard & Digital Clearance Pass */}
+      <div id="settings-authcard-card" className="glass-panel rounded-2xl p-4 sm:p-6 border border-emerald-500/40 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <CreditCard className="w-5 h-5 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-bold text-slate-100">
+                  Institutional AuthCard & Clearance Pass
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-extrabold text-emerald-400">
+                  BTN-8849-2026
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] font-extrabold text-amber-300">
+                  Tier 2 Clearance
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Official institutional identity credential certifying clearance for Joshua James Bergin.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title="Print official clearance certificate"
+            >
+              <Printer className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Print PDF</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCurrentPage('withdrawal-review')}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-slate-950 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Review Clearance</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Embedded Interactive 3D AuthCard */}
+        <div className="py-2 flex justify-center">
+          <InstitutionalAuthCard compact={false} />
         </div>
       </div>
 

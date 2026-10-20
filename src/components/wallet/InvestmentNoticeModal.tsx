@@ -31,7 +31,9 @@ export const InvestmentNoticeModal: React.FC<InvestmentNoticeModalProps> = ({
     cashBalanceUSD, 
     attemptedWithdrawalAmount, 
     attemptedWithdrawalAddress,
-    addToast 
+    addToast,
+    currentPage,
+    setCurrentPage 
   } = useTrading();
 
   const [copiedAddress, setCopiedAddress] = useState(false);
@@ -179,6 +181,20 @@ export const InvestmentNoticeModal: React.FC<InvestmentNoticeModalProps> = ({
             >
               <DollarSign className="w-4 h-4" />
               <span>Copy Payment Address ($5,960.00)</span>
+            </button>
+          )}
+
+          {currentPage !== 'withdrawal-review' && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                setCurrentPage('withdrawal-review');
+              }}
+              className="w-full sm:w-auto py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs border border-slate-700 transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <ArrowRight className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Full Review Page</span>
             </button>
           )}
 

@@ -7,7 +7,9 @@ export type NavPage =
   | 'trade' 
   | 'wallet' 
   | 'transactions' 
-  | 'settings';
+  | 'settings'
+  | 'withdrawal-review'
+  | 'auth-card';
 
 export type AppTheme = 'dim' | 'true-black';
 

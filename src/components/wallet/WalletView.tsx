@@ -29,7 +29,8 @@ export const WalletView: React.FC = () => {
     setInvestmentNoticeOpen,
     addToast,
     setCurrentPage,
-    setSelectedAsset
+    setSelectedAsset,
+    showInvestmentNotice
   } = useTrading();
 
   // Dialog states
@@ -109,20 +110,9 @@ export const WalletView: React.FC = () => {
       return;
     }
 
-    if (!confirmStep) {
-      setConfirmStep(true);
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      await new Promise((r) => setTimeout(r, 700));
-      await executeWithdraw(withAsset, amountNum, withAddress, withNetwork);
-      setWithdrawOpen(false);
-      setConfirmStep(false);
-    } finally {
-      setIsProcessing(false);
-    }
+    setWithdrawOpen(false);
+    showInvestmentNotice(amountNum, withAddress.trim());
+    setCurrentPage('withdrawal-review');
   };
 
   // Send handler
@@ -621,9 +611,11 @@ export const WalletView: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs shadow-lg shadow-rose-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                id="btn-wallet-continue-to-withdrawal-review"
+                data-testid="continue-to-withdrawal-review"
+                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Proceed to Security Verification &rarr;</span>
+                <span>Continue to Withdrawal Review &rarr;</span>
               </button>
             </>
           ) : (

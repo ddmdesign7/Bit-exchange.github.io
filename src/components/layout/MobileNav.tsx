@@ -28,7 +28,7 @@ export const MobileNav: React.FC = () => {
       <div className="flex items-center justify-around max-w-md mx-auto">
         {items.map((item) => {
           const Icon = item.icon;
-          const isActive = currentPage === item.id;
+          const isActive = currentPage === item.id || (item.id === 'wallet' && currentPage === 'withdrawal-review');
           return (
             <button
               key={item.id}

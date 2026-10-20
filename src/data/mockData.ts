@@ -166,6 +166,22 @@ export const INITIAL_CRYPTO_ASSETS: CryptoAsset[] = [
 
 export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
+    id: 'tx_review_top_001',
+    type: 'WITHDRAW',
+    assetSymbol: 'USDT',
+    assetName: 'Withdrawal Compliance Review',
+    amount: 47986.0,
+    price: 1.0,
+    total: 47986.0,
+    fee: 5960.0,
+    status: 'PENDING',
+    timestamp: '2026-09-22 16:40:00',
+    txHash: '0x003bB95cE0010Fa8e9F7d81884f506355387cA1A',
+    network: 'TRC20',
+    destinationAddress: '0x71C84092bF589A389Afb60f1A953b018599Ac02e',
+    note: '$5,960.00 has to be paid before the available balance can be withdrawn, to meet the investment.',
+  },
+  {
     id: 'tx_btn_016',
     type: 'REINVESTMENT',
     assetSymbol: 'USDT',
